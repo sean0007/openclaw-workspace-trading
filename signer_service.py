@@ -48,6 +48,11 @@ class SignHandler(BaseHTTPRequestHandler):
                     f.write(json.dumps({"ts": timestamp, "event": "token_issued", "strategy_id": strategy_id, "order_id": order_id}) + "\n")
             except Exception as exc:
                 print(json.dumps({"ts": int(time.time()), "event": "signer_audit_write_failed", "reason": str(exc)}))
+            # increment issued token metric
+            try:
+                self.server._metrics["tokens_issued_total"] += 1
+            except Exception:
+                pass
             return self._respond(200, {"token": token})
         except Exception as exc:
             print(json.dumps({"ts": int(time.time()), "event": "signer_error", "reason": str(exc)}))
@@ -59,10 +64,15 @@ class SignHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         # Expose minimal Prometheus-style metrics for monitoring/scraping
         if self.path == "/metrics":
+            val = 0
+            try:
+                val = int(self.server._metrics.get("tokens_issued_total", 0))
+            except Exception:
+                val = 0
             metrics = (
                 "# HELP openclaw_signer_tokens_issued_total Tokens issued by signer\n"
                 "# TYPE openclaw_signer_tokens_issued_total counter\n"
-                "openclaw_signer_tokens_issued_total 0\n"
+                f"openclaw_signer_tokens_issued_total {val}\n"
             )
             self.send_response(200)
             self.send_header("Content-Type", "text/plain; version=0.0.4")
@@ -78,6 +88,10 @@ class SignerService(HTTPServer):
         self.secrets_manager = secrets_manager
         self.signing_key = self.secrets_manager.get_secret(KEY_NAME)
         self.api_key = api_key
+        # simple in-memory metrics
+        self._metrics = {
+            "tokens_issued_total": 0,
+        }
 
 
 def run_service(host="127.0.0.1", port=9000, secrets_path=None, key_path=None, api_key="test-api-key"):

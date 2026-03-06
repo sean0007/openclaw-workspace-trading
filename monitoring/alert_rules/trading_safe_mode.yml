@@ -1,0 +1,47 @@
+groups:
+  - name: trading.rules
+    rules:
+      - alert: ExecutionRejectedRateHigh
+        expr: rate(openclaw_execute_rejected_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High execution rejection rate"
+          description: "Execution service is rejecting orders at a high rate ({{ $value }} per second)."
+
+      - alert: GatewayRiskLocked
+        expr: openclaw_execution_gateway_risk_locked == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Gateway risk lock is active"
+          description: "Trading gateway risk lock is engaged. Check risk service and operator actions."
+
+      - alert: OrdersPendingHigh
+        expr: openclaw_orders_pending_total > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High pending order count"
+          description: "There are more than 10 pending orders in the execution service."
+
+      - alert: SignerTokenRateHigh
+        expr: rate(openclaw_signer_tokens_issued_total[5m]) > 50
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "High token issuance rate"
+          description: "Signer is issuing tokens at a high rate ({{ $value }} per second)."
+
+      - alert: NodeExporterDown
+        expr: up{job="node"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node exporter down"
+          description: "Node exporter target is not up; host metrics not available."

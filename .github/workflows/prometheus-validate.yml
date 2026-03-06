@@ -1,0 +1,25 @@
+name: Prometheus Rules Validate
+
+on:
+  pull_request:
+  push:
+    paths:
+      - 'monitoring/prometheus/**'
+      - 'monitoring/alert_rules/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Prometheus rules with promtool (Docker)
+        run: |
+          set -euo pipefail
+          # run promtool inside prom/prometheus image; mount repo folder
+          docker run --rm -v ${{ github.workspace }}/monitoring/prometheus:/etc/prometheus:ro -v ${{ github.workspace }}/monitoring/alert_rules:/etc/prometheus/rules:ro prom/prometheus:latest promtool check rules /etc/prometheus/rules
+
+      - name: Validate Prometheus config with promtool (Docker)
+        run: |
+          set -euo pipefail
+          docker run --rm -v ${{ github.workspace }}/monitoring/prometheus:/etc/prometheus:ro prom/prometheus:latest promtool check config /etc/prometheus/prometheus.yml

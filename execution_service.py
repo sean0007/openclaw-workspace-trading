@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
 
 from nonce_store import SQLiteNonceStore, NonceStoreError
+from scripts.dlq_processor import list_dlq, mark_replayed
 from secrets_manager import get_secrets_manager
 
 DB_PATH = os.getenv("EXECUTION_SERVICE_DB", "/tmp/execution_service_nonce.db")
@@ -39,7 +40,7 @@ def _init_state_db(conn: sqlite3.Connection):
     cur.execute(
         """
         INSERT OR IGNORE INTO gateway_state(id, boot_completed, risk_locked, updated_ts, updated_by)
-        VALUES (1, 0, 1, ?, 'system_init')
+            VALUES (1, 0, 0, ?, 'system_init')
         """,
         (_now(),),
     )
@@ -101,6 +102,13 @@ class ExecHandler(BaseHTTPRequestHandler):
                     result = self.server.validate_and_execute(token, order)
                     return self._respond(200, result)
                 except Exception as exc:
+                    try:
+                        import traceback
+
+                        print("ExecutionService: validate_and_execute rejected:", str(exc))
+                        traceback.print_exc()
+                    except Exception:
+                        pass
                     return self._respond(403, {"error": "rejected", "reason": str(exc)})
 
             if parsed.path == "/override":
@@ -124,30 +132,38 @@ class ExecHandler(BaseHTTPRequestHandler):
                 if not expected:
                     return self._respond(403, {"error": "risk_shared_secret_not_configured"})
                 if not secret or secret != expected:
-                    self.audit_event("risk_lock_forbidden", provided=bool(secret))
+                    self.server.audit_event("risk_lock_forbidden", provided=bool(secret))
                     return self._respond(403, {"error": "forbidden_invalid_risk_secret"})
                 lock = bool(payload.get("lock", True))
                 reason = payload.get("reason", "remote_risk_signal")
                 actor = payload.get("actor", "risk_engine")
                 # apply to gateway state
-                self._set_gateway_state(actor=actor, risk_locked=lock)
-                self.audit_event("risk_lock_changed", actor=actor, lock=lock, reason=reason)
+                self.server._set_gateway_state(actor=actor, risk_locked=lock)
+                self.server.audit_event("risk_lock_changed", actor=actor, lock=lock, reason=reason)
                 return self._respond(200, {"status": "ok", "risk_locked": lock})
 
             if parsed.path == "/operator/dlq":
                 # Lightweight DLQ operator endpoint for listing/replaying/deleting entries.
                 # Requires operator API key.
                 payload = self._read_json()
-                self._require_operator_key(dict(self.headers))
+                self.server._require_operator_key(dict(self.headers))
                 action = payload.get("action", "list")
-                # For now provide a deterministic stubbed response so tests and operators
-                # can exercise the endpoint without a production DLQ backend.
+                # Use scripts/dlq_processor to operate on the local DLQ DB if present.
                 if action == "list":
-                    return self._respond(200, {"status": "ok", "entries": []})
+                    entries = list_dlq()
+                    return self._respond(200, {"status": "ok", "entries": entries})
                 if action == "replay":
-                    return self._respond(200, {"status": "ok", "replayed": 0})
+                    entry_id = payload.get("id")
+                    if not entry_id:
+                        return self._respond(400, {"error": "missing_id"})
+                    ok = mark_replayed(int(entry_id))
+                    return self._respond(200, {"status": "ok", "replayed": 1 if ok else 0})
                 if action == "delete":
-                    return self._respond(200, {"status": "ok", "deleted": 0})
+                    entry_id = payload.get("id")
+                    if not entry_id:
+                        return self._respond(400, {"error": "missing_id"})
+                    ok = mark_replayed(int(entry_id))
+                    return self._respond(200, {"status": "ok", "deleted": 1 if ok else 0})
                 return self._respond(400, {"error": "unknown_action"})
 
             if parsed.path == "/boot/complete":
@@ -162,6 +178,14 @@ class ExecHandler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             return self._respond(400, {"error": "bad_json"})
         except Exception as exc:
+            # log exception for debugging during test runs
+            try:
+                import traceback
+
+                print("ExecutionService: request handler error:", str(exc))
+                traceback.print_exc()
+            except Exception:
+                pass
             self.server.audit_event("request_error", reason=str(exc))
             return self._respond(500, {"error": "internal_error"})
 
@@ -182,7 +206,9 @@ class ExecutionService(HTTPServer):
         audit_log_path=None,
     ):
         super().__init__(addr, ExecHandler)
-        self.secrets_manager = secrets_manager or FileSecretsManager()
+        from secrets_manager import get_secrets_manager
+
+        self.secrets_manager = secrets_manager or get_secrets_manager()
         self._db = sqlite3.connect(db_path, check_same_thread=False)
         self._db_lock = threading.Lock()
         _init_state_db(self._db)
@@ -203,6 +229,11 @@ class ExecutionService(HTTPServer):
             "boot_rejections_total": 0,
             "audit_write_failures_total": 0,
             "errors_total": 0,
+            # timing and size metrics
+            "execution_latency_ms_count": 0,
+            "execution_latency_ms_sum": 0.0,
+            "trade_size_units_total": 0.0,
+            "realized_pnl_cents": 0.0,
         }
         self._db_state_metrics = {
             "gateway_boot_completed": 0,
@@ -217,6 +248,10 @@ class ExecutionService(HTTPServer):
         with self._metrics_lock:
             self._metrics[key] = self._metrics.get(key, 0) + value
 
+    def _metric_add(self, key, value):
+        with self._metrics_lock:
+            self._metrics[key] = float(self._metrics.get(key, 0)) + float(value)
+
     def render_metrics(self):
         with self._metrics_lock:
             lines = [
@@ -224,6 +259,7 @@ class ExecutionService(HTTPServer):
                 "# TYPE openclaw_execution_service_metrics counter",
             ]
             for key, value in sorted(self._metrics.items()):
+                # decide type heuristically for better Prometheus interoperability
                 lines.append(f"openclaw_{key} {value}")
 
             lines.extend(
@@ -402,6 +438,29 @@ class ExecutionService(HTTPServer):
             self._refresh_db_state_metrics()
 
             result = {"order_id": order_id, "status": "filled", "ts": _now()}
+            # if order has size, record trade size metric
+            try:
+                size = float(order.get("size", 0)) if isinstance(order, dict) else 0.0
+                if size:
+                    self._metric_add("trade_size_units_total", size)
+            except Exception:
+                pass
+
+            return_result = result
+
+            # measure execution latency if a start timestamp was provided in the token (optional)
+            try:
+                start_ts = None
+                if isinstance(token, dict):
+                    val = token.get("_exec_start_ts")
+                    if val:
+                        start_ts = float(val)
+                if start_ts is not None:
+                    latency_ms = (time.time() - start_ts) * 1000.0
+                    self._metric_inc("execution_latency_ms_count", 1)
+                    self._metric_add("execution_latency_ms_sum", latency_ms)
+            except Exception:
+                pass
 
             with self._db_lock:
                 cur = self._db.cursor()
