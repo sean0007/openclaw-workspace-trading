@@ -15,8 +15,16 @@ receivers:
         smarthost: 'smtp.example.com:587'
         auth_username: 'alertmanager'
         auth_identity: 'alertmanager'
-        auth_password: 'REPLACE_ME'
+        # Use environment substitution in your deployment to inject the real password.
+        # Example: set ALERTMANAGER_SMTP_PASSWORD in the environment and render this file with envsubst.
+        auth_password: '${ALERTMANAGER_SMTP_PASSWORD}'
     webhook_configs:
-      - url: 'http://localhost:5001/alert'  # placeholder for local testing
+      - url: 'http://alert-receiver:5001/alert' # use compose service DNS so Alertmanager posts to receiver container
+
+- name: 'team-chat'
+  slack_configs:
+    - api_url: '${ALERTMANAGER_SLACK_WEBHOOK}'
+      channel: '#alerts'
+      text: '{{ template "slack.default.title" . }}\n{{ range .Alerts }}{{ .Annotations.summary }} - {{ .Annotations.runbook }}\n{{ end }}'
 
 templates: []

@@ -7,8 +7,9 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "High execution rejection rate"
-          description: "Execution service is rejecting orders at a high rate ({{ $value }} per second)."
+          summary: 'High execution rejection rate'
+          description: 'Execution service is rejecting orders at a high rate ({{ $value }} per second).'
+          runbook: 'https://example.com/runbooks/execution_rejections'
 
       - alert: GatewayRiskLocked
         expr: openclaw_execution_gateway_risk_locked == 1
@@ -16,8 +17,9 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Gateway risk lock is active"
-          description: "Trading gateway risk lock is engaged. Check risk service and operator actions."
+          summary: 'Gateway risk lock is active'
+          description: 'Trading gateway risk lock is engaged. Check risk service and operator actions.'
+          runbook: 'https://example.com/runbooks/gateway_risk_lock'
 
       - alert: OrdersPendingHigh
         expr: openclaw_orders_pending_total > 10
@@ -25,8 +27,9 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High pending order count"
-          description: "There are more than 10 pending orders in the execution service."
+          summary: 'High pending order count'
+          description: 'There are more than 10 pending orders in the execution service.'
+          runbook: 'https://example.com/runbooks/pending_orders'
 
       - alert: SignerTokenRateHigh
         expr: rate(openclaw_signer_tokens_issued_total[5m]) > 50
@@ -34,8 +37,9 @@ groups:
         labels:
           severity: info
         annotations:
-          summary: "High token issuance rate"
-          description: "Signer is issuing tokens at a high rate ({{ $value }} per second)."
+          summary: 'High token issuance rate'
+          description: 'Signer is issuing tokens at a high rate ({{ $value }} per second).'
+          runbook: 'https://example.com/runbooks/signer_token_rate'
 
       - alert: NodeExporterDown
         expr: up{job="node"} == 0
@@ -43,5 +47,36 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Node exporter down"
-          description: "Node exporter target is not up; host metrics not available."
+          summary: 'Node exporter down'
+          description: 'Node exporter target is not up; host metrics not available.'
+          runbook: 'https://example.com/runbooks/node_exporter_down'
+
+      - alert: DLQGrowth
+        expr: increase(openclaw_dlq_entries_total[10m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'DLQ growth detected'
+          description: 'Dead-letter queue has new entries in the last 10 minutes.'
+          runbook: 'https://example.com/runbooks/dlq_growth'
+
+      - alert: FeedPrimaryDown
+        expr: up{job="market_data", feed="primary"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Primary market data feed down'
+          description: 'Primary market data feed is down; failover may be active.'
+          runbook: 'https://example.com/runbooks/feed_failover'
+
+      - alert: SafeModeTriggered
+        expr: (openclaw_execution_gateway_risk_locked == 1) or (openclaw_orders_pending_total > 20)
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Safe mode triggered'
+          description: 'Gateway risk lock active or excessive pending orders; trading may be in safe mode.'
+          runbook: 'https://example.com/runbooks/safe_mode'
