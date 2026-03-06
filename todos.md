@@ -398,6 +398,128 @@ The following tasks were appended by the automated architecture audit to cover m
 
 - [ ] Replace `StrategyWorker` run path with process-based runner (scaffold)
       Description: Update `strategy_runtime/strategy_worker.py` to use multiprocessing for executing strategy callables with a timeout wrapper.
+
+---
+
+APPENDIX: Missing/Incomplete Tasks (automated audit additions 2026-03-06)
+
+ARCHITECTURE
+
+- [ ] Add canonical `docs/master_plan.md` (canonical master plan)
+      Description: Populate a single authoritative master plan file (architecture, phases, acceptance criteria) so automated checks can reference it.
+      Files To Modify: docs/master_plan.md (new)
+      Acceptance Criteria: `tests/e2e/test_master_plan_present.py` passes by finding the file
+
+- [ ] Add `configs/` top-level folder and example `openclaw.json` template
+      Description: Provide canonical service config and sample env-driven example for local dev and CI.
+      Files To Modify: configs/example_openclaw.json (new), README.md
+      Acceptance Criteria: `scripts/validate_config.py configs/example_openclaw.json` exits 0
+
+TRADING ENGINE
+
+- [ ] Implement `core/exchange_adapter.py` simulator adapter
+      Description: Small adapter for simulator exchange used by smoke harness and unit tests.
+      Files To Modify: core/exchange_adapter.py (new), scripts/exchange_sim.py (new)
+      Acceptance Criteria: Smoke harness posts an order and receives a simulated fill
+
+- [ ] Add `/operator/positions` read endpoint to `execution_service`
+      Description: Expose current position snapshot for audits and reconciler ingestion.
+      Files To Modify: execution_service.py, core/position_store.py (new)
+      Acceptance Criteria: `curl /operator/positions` returns JSON with positions
+
+RISK MANAGEMENT
+
+- [ ] Wire `RISK_CIRCUIT_SHARED_SECRET` usage into CI test helper and docs
+      Description: Document and make tests use a test shared secret where needed to exercise risk notify endpoints.
+      Files To Modify: tests/conftest.py, README.md
+      Acceptance Criteria: Risk-notify integration tests run without manual env setup
+
+- [ ] Emit `trading_safe_mode_active` gauge in `risk_engine` and surface in `/metrics`
+      Description: Export a gauge and ensure `execution_service` metrics include it for alerting.
+      Files To Modify: risk_engine.py, execution_service.py
+      Acceptance Criteria: `curl /metrics` returns `trading_safe_mode_active` with 0/1
+
+STRATEGY SYSTEM
+
+- [ ] Implement process-based `strategy_runtime/strategy_worker.py` (minimal)
+      Description: Replace or complement thread runner with process runner and enforce timeouts.
+      Files To Modify: strategy_runtime/strategy_worker.py
+      Acceptance Criteria: `tests/test_strategy_isolation.py` verifies timeout enforcement
+
+- [ ] Add per-strategy config loader and examples
+      Description: Provide `strategy_runtime/example_strategy.yaml` showing `strategy_timeout_secs` and `max_memory_mb` entries.
+      Files To Modify: strategy_runtime/example_strategy.yaml (new), strategy_runtime/strategy_manager.py
+      Acceptance Criteria: Manager reads config and applies timeout to worker
+
+AGENT AUTOMATION
+
+- [ ] Add `agents/cron.yml` scaffold and docs for agent scheduling
+      Description: Create a simple cron definition for OpenClaw agents (todo-agent, monitoring-agent, arch-agent).
+      Files To Modify: agents/cron.yml (new), docs/agents.md (new)
+      Acceptance Criteria: `openclaw agent-scheduler validate agents/cron.yml` (or reviewer checks file exists)
+
+- [ ] Add small `tests/test_todo_agent_integration.py` harness
+      Description: Start a local OpenClaw agent instance and verify it executes one trivial task from `todos.md`.
+      Files To Modify: tests/test_todo_agent_integration.py (new)
+      Acceptance Criteria: CI can run the test in isolation
+
+MONITORING
+
+- [ ] Ensure `monitoring/prometheus/scrape_configs.yml` includes all core services
+      Description: Add jobs for `execution_service`, `signer_service`, `strategy_service` and `reconciler` with configurable ports.
+      Files To Modify: monitoring/prometheus/scrape_configs.yml
+      Acceptance Criteria: Prometheus job list contains these jobs
+
+- [ ] Add exporter in `signer_service` if missing and verify scrape target
+      Description: Confirm `/metrics` exists and add minimal counters (tokens_issued_total) if absent.
+      Files To Modify: signer_service.py
+      Acceptance Criteria: `curl /metrics` returns a Prometheus text response with token metric
+
+GRAFANA DASHBOARDS
+
+- [ ] Add required panels to `monitoring/grafana/dashboards/trading-desk.json`
+      Description: Ensure panels cover PnL, order latency, fill rate, market freshness, strategy queue depth.
+      Files To Modify: monitoring/grafana/dashboards/trading-desk.json
+      Acceptance Criteria: Dashboard JSON contains at least five panels referencing `openclaw_` metrics
+
+CI/CD
+
+- [ ] Add `.github/workflows/smoke.yml` to run `scripts/smoke_harness.py` and upload artifacts
+      Description: Smoke harness validates system health end-to-end and produces `artifacts/smoke_harness_result.json`.
+      Files To Modify: .github/workflows/smoke.yml (new)
+      Acceptance Criteria: Workflow runs on PR and uploads artifacts
+
+- [ ] Push `fix/tests-integration` branch to remote and open a PR
+      Description: Publish local branch and create a PR for review of test fixes and CI changes.
+      Files To Modify: (repo remote)
+      Acceptance Criteria: PR exists on remote repository
+
+LOGGING
+
+- [ ] Add `scripts/audit_exporter.py` config to ship audit logs to `/artifacts/audit/`
+      Description: Ensure audit export writes append-only files and include a retention metadata JSON.
+      Files To Modify: scripts/audit_exporter.py, docs/runbooks/critical_alert_runbook.md
+      Acceptance Criteria: Artifacts produced and retention JSON written
+
+TESTING
+
+- [ ] Add unit test coverage target and CI upload for coverage.xml
+      Description: Configure `pytest` to generate coverage and upload as artifact in CI.
+      Files To Modify: .github/workflows/ci.yml (update), requirements.txt
+      Acceptance Criteria: `results/coverage.xml` uploaded as CI artifact
+
+- [ ] Add integration test for reconciler ingest and mismatch detection
+      Description: Expand `tests/test_reconciler_ingest.py` to validate reconciler detects mismatches and fails accordingly.
+      Files To Modify: tests/test_reconciler_ingest.py
+      Acceptance Criteria: Test asserts mismatch detection
+
+DOCUMENTATION
+
+- [ ] Update `docs/audit_report.md` with this audit summary and link to new tasks
+      Description: Append a brief summary of missing components and link to `todos.md` sections.
+      Files To Modify: docs/audit_report.md
+      Acceptance Criteria: File contains summary and links to `todos.md`
+
       Files To Modify: strategy_runtime/strategy_worker.py
       Acceptance Criteria: `tests/test_strategy_isolation.py` spawns a sleeping strategy which is killed after timeout
 
