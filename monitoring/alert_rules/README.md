@@ -20,5 +20,6 @@ docker run --rm -v $(pwd)/monitoring/prometheus:/etc/prometheus:ro prom/promethe
 ```
 
 Notes:
+
 - Alerts use operational metric names exported by `execution_service` and `signer_service`.
 - Tune thresholds and durations (`for:`) to match production characteristics before enabling paging.
