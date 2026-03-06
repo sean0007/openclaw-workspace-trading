@@ -233,6 +233,7 @@ class ExecutionService(HTTPServer):
             "execution_latency_ms_count": 0,
             "execution_latency_ms_sum": 0.0,
             "trade_size_units_total": 0.0,
+            "trade_slippage_bps": 0.0,
             "realized_pnl_cents": 0.0,
         }
         self._db_state_metrics = {
@@ -481,6 +482,25 @@ class ExecutionService(HTTPServer):
                 "status": "filled",
                 "result": result,
             })
+            # record optional slippage and realized PnL if provided in order/result
+            try:
+                slippage = None
+                pnl = None
+                if isinstance(order, dict):
+                    slippage = order.get("slippage_bps") or order.get("slippage")
+                    pnl = order.get("realized_pnl_cents") or order.get("realized_pnl")
+                if slippage is not None:
+                    try:
+                        self._metrics["trade_slippage_bps"] = float(slippage)
+                    except Exception:
+                        pass
+                if pnl is not None:
+                    try:
+                        self._metric_add("realized_pnl_cents", float(pnl))
+                    except Exception:
+                        pass
+            except Exception:
+                pass
             return result
         except Exception as exc:
             self._metric_inc("execute_rejected_total")

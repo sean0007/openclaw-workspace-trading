@@ -32,3 +32,11 @@ services:
     ports:
       - '9100:9100'
     restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./monitoring/alertmanager/config.yml:/etc/alertmanager/config.yml:ro
+    ports:
+      - '9093:9093'
+    restart: unless-stopped
