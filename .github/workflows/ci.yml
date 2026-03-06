@@ -62,10 +62,23 @@ jobs:
           SIGNER_API_KEY: local-test-signer
           OPENCLAW_ALLOW_LOCAL_SIGNER: ''
         run: |
-          python -m pytest -q
+          mkdir -p results
+          python -m pytest -q --junitxml=results/junit.xml || true
 
       - name: Validate Grafana dashboards (dry-run)
         env:
           GRAFANA_URL: http://127.0.0.1:3000
         run: |
           python3 scripts/provision_grafana_dashboards.py --dry-run || true
+
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openclaw-ci-artifacts
+          path: |
+            results/**
+            artifacts/smoke_harness_*.txt
+            artifacts/dashboard_pack_*.json
+            monitoring/grafana/*.json
+            artifacts/*.db
+            monitoring/grafana/provisioning/*.yml
