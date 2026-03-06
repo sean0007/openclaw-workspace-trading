@@ -1,0 +1,10 @@
+groups:
+  - name: recording.rules
+    rules:
+      - record: job:execution_latency_ms:avg
+        expr: |
+          (
+            rate(openclaw_execution_latency_ms_sum[5m])
+            / 
+            rate(openclaw_execution_latency_ms_count[5m])
+          )
