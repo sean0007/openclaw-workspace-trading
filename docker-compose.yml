@@ -32,3 +32,20 @@ services:
     ports:
       - '9100:9100'
     restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./monitoring/alertmanager/config.yml:/etc/alertmanager/config.yml:ro
+    ports:
+      - '9093:9093'
+    restart: unless-stopped
+
+  alert-receiver:
+    image: python:3.11-slim
+    volumes:
+      - ./monitoring/alertmanager:/srv:ro
+    command: ["python", "/srv/receiver.py"]
+    ports:
+      - '5001:5001'
+    restart: unless-stopped
