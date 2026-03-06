@@ -1,0 +1,8 @@
+{
+  "active": false,
+  "generated": "2026-03-05T070905Z",
+  "notes": "Stub snapshot produced by automation. Replace with real runtime exporter in production.",
+  "open_orders": [],
+  "positions": {},
+  "strategy_id": "unknown"
+}

@@ -1,0 +1,7 @@
+{
+  "generated": "2026-03-05T07:25:25.078082",
+  "idempotency_namespaces": {
+    "s1": "idem_s1",
+    "s2": "idem_s2"
+  }
+}

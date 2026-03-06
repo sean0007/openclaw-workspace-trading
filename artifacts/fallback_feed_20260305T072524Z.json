@@ -1,0 +1,6 @@
+{
+  "generated": "2026-03-05T07:25:24.893522",
+  "primary": "ws://primary.feed",
+  "fallback": "https://fallback.rest",
+  "auto_failover": true
+}

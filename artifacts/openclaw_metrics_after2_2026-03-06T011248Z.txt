@@ -1,0 +1,41 @@
+== execution /metrics ==
+# HELP openclaw_execution_service_metrics Execution service counters
+# TYPE openclaw_execution_service_metrics counter
+openclaw_audit_write_failures_total 0
+openclaw_boot_rejections_total 0
+openclaw_errors_total 0
+openclaw_execute_filled_total 0
+openclaw_execute_idempotent_total 0
+openclaw_execute_rejected_total 0
+openclaw_execute_requests_total 0
+openclaw_risk_lock_rejections_total 0
+# HELP openclaw_execution_gateway_boot_completed Gateway boot completion state (0/1)
+# TYPE openclaw_execution_gateway_boot_completed gauge
+openclaw_execution_gateway_boot_completed 0
+# HELP openclaw_execution_gateway_risk_locked Gateway risk lock state (0/1)
+# TYPE openclaw_execution_gateway_risk_locked gauge
+openclaw_execution_gateway_risk_locked 1
+# HELP openclaw_orders_pending_total Pending execution orders
+# TYPE openclaw_orders_pending_total gauge
+openclaw_orders_pending_total 0
+# HELP openclaw_orders_filled_total Filled execution orders
+# TYPE openclaw_orders_filled_total gauge
+openclaw_orders_filled_total 0
+# HELP openclaw_orders_rejected_total Rejected execution orders
+# TYPE openclaw_orders_rejected_total gauge
+openclaw_orders_rejected_total 0
+\n== signer /metrics ==
+# HELP openclaw_signer_tokens_issued_total Tokens issued by signer
+# TYPE openclaw_signer_tokens_issued_total counter
+openclaw_signer_tokens_issued_total 0
+\n== strategy /metrics ==
+
+# HELP openclaw_strategy_evaluated_total Strategies evaluated
+# TYPE openclaw_strategy_evaluated_total counter
+openclaw_strategy_evaluated_total 0
+# HELP openclaw_strategy_accepted_total Strategies accepted
+# TYPE openclaw_strategy_accepted_total counter
+openclaw_strategy_accepted_total 0
+# HELP openclaw_worker_queue_depth Worker queue depth
+# TYPE openclaw_worker_queue_depth gauge
+openclaw_worker_queue_depth 0

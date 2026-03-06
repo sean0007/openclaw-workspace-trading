@@ -1,0 +1,17 @@
+{
+  "generated": "2026-03-05T071603Z",
+  "dashboards": [
+    {
+      "name": "strategy_overview",
+      "url": "https://grafana.example/d/strategy"
+    },
+    {
+      "name": "portfolio_health",
+      "url": "https://grafana.example/d/portfolio"
+    },
+    {
+      "name": "system_health",
+      "url": "https://grafana.example/d/system"
+    }
+  ]
+}

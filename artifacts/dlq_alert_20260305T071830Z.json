@@ -1,0 +1,8 @@
+{
+  "generated": "2026-03-05T07:18:30.883971",
+  "alert": "DLQ_INSERTED",
+  "detail": {
+    "id": "dlq-stub-1",
+    "reason": "simulated_failure"
+  }
+}

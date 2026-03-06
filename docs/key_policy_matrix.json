@@ -1,0 +1,18 @@
+{
+  "generated": "2026-03-05",
+  "description": "Key policy matrix mapping roles to permissions and recommended storage",
+  "roles": {
+    "market_data": {
+      "permissions": "read-only",
+      "recommendation": "secrets manager, read-only namespace"
+    },
+    "trading": {
+      "permissions": "trade-only (no transfers)",
+      "recommendation": "secrets manager, scoped to subaccount"
+    },
+    "account": {
+      "permissions": "account management (no withdrawals preferred)",
+      "recommendation": "highly restricted, rotation required"
+    }
+  }
+}

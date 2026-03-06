@@ -1,0 +1,8 @@
+{
+  "generated": "2026-03-05T07:25:24.999663",
+  "kill_switch": {
+    "enabled": true,
+    "latch": true,
+    "manual_reset_required": true
+  }
+}

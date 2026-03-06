@@ -1,0 +1,47 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "trading-desk",
+    "title": "Trading Desk",
+    "timezone": "browser",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Portfolio PnL",
+        "id": 1,
+        "targets": [{ "expr": "openclaw_pnl_total", "refId": "A" }]
+      },
+      {
+        "type": "graph",
+        "title": "Order Latency (ms)",
+        "id": 2,
+        "targets": [{ "expr": "openclaw_order_latency_bucket", "refId": "A" }]
+      },
+      {
+        "type": "singlestat",
+        "title": "Fill Ratio",
+        "id": 3,
+        "targets": [{ "expr": "openclaw_fill_ratio", "refId": "A" }]
+      },
+      {
+        "type": "graph",
+        "title": "Market Freshness (s)",
+        "id": 4,
+        "targets": [
+          {
+            "expr": "openclaw_market_price - openclaw_market_price",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Strategy Queue Depth",
+        "id": 5,
+        "targets": [{ "expr": "openclaw_worker_queue_depth", "refId": "A" }]
+      }
+    ],
+    "schemaVersion": 27,
+    "version": 1
+  }
+}

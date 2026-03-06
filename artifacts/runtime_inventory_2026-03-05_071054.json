@@ -1,0 +1,15 @@
+{
+  "generated": "2026-03-05T071054Z",
+  "platform": "macOS-26.3-arm64-arm-64bit",
+  "python": "3.9.6",
+  "docker_ps": [
+    "CONTAINER ID                                                       IMAGE                                     COMMAND                                                                                                                                                   CREATED      STATUS                 PORTS                                         NAMES",
+    "182b51928746f648beccfb7f3f050a3b1ce6dadae9f0d8b36d81556b5648d4f5   grafana/grafana:11.2.2                    \"/run.sh\"                                                                                                                                                 3 days ago   Up 4 hours             127.0.0.1:3200->3000/tcp                      monitoring-grafana",
+    "b379744014bcfeaa974455b4a8eb846dad0c2b93558a57408d6b2990eb2937da   prom/prometheus:v2.55.1                   \"/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --storage.tsdb.retention.time=30d --web.enable-lifecycle\"   3 days ago   Up 4 hours             127.0.0.1:9090->9090/tcp                      monitoring-prometheus",
+    "b7f8a1df8627fb3e6f8e1c578911a093eabedf3470941d8a582da314c347a553   grafana/promtail:3.1.1                    \"/usr/bin/promtail -config.file=/etc/promtail/config.yml\"                                                                                                 3 days ago   Up 4 hours                                                           monitoring-promtail",
+    "9dcde4e6a19d86802014ded3bfce1ae79d4aac915d1a00f41cc647646d260e7d   prom/alertmanager:v0.27.0                 \"/bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml --storage.path=/alertmanager\"                                                         3 days ago   Up 4 hours             127.0.0.1:9093->9093/tcp                      monitoring-alertmanager",
+    "a97d1fe6fc62ebae6643da9fffac646dbcf71f99f20b03c8bf75967ea50eceaf   grafana/loki:3.1.1                        \"/usr/bin/loki -config.file=/etc/loki/config.yml\"                                                                                                         3 days ago   Up 4 hours             127.0.0.1:3100->3100/tcp                      monitoring-loki",
+    "685e949d778f7946a9020dfc88355105d4a3df7f7fcdb38ad0794e971dde2b95   freqtradeorg/freqtrade:stable             \"freqtrade trade --config /freqtrade/config/config.json --strategy TrendFollowingBase\"                                                                    5 days ago   Up 4 hours             127.0.0.1:8080->8080/tcp                      freqtrade",
+    "dca5d595fe0da5e32d577f4dac83c748788a3fc67d55aca763699f2552b0560f   openclaw-mission-control-trading-server   \"gunicorn -b 0.0.0.0:8545 app:app\"                                                                                                                        5 days ago   Up 4 hours (healthy)   0.0.0.0:8545->8545/tcp, [::]:8545->8545/tcp   openclaw-mission-control-trading-server-1"
+  ]
+}

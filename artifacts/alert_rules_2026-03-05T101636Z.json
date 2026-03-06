@@ -1,0 +1,20 @@
+{
+  "generated": "2026-03-05T101636Z",
+  "alerts": [
+    {
+      "name": "risk_heartbeat_missing",
+      "severity": "critical",
+      "expr": "risk_heartbeat == false"
+    },
+    {
+      "name": "market_data_stale",
+      "severity": "critical",
+      "expr": "market_data_freshness_sec > 5"
+    },
+    {
+      "name": "execution_blocked",
+      "severity": "high",
+      "expr": "execution_blocked == true"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run trading agent",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_agent.py",
+      "args": ["--workspace", "${workspaceFolder}"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run trading agent (module)",
+      "type": "python",
+      "request": "launch",
+      "module": "openclaw",
+      "args": ["run", "--workspace", "${workspaceFolder}"],
+      "console": "integratedTerminal"
+    }
+  ]
+}

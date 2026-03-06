@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run trading agent",
+      "type": "shell",
+      "command": "python3",
+      "args": ["execution_service.py"],
+      "options": {
+        "env": {
+          "SECRETS_FILE_PATH": "${workspaceFolder}/.runtime/trading_secrets.json",
+          "EXECUTION_OPERATOR_API_KEY": "local-dev-operator-key-change-me"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

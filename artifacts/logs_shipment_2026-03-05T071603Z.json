@@ -1,0 +1,5 @@
+{
+  "generated": "2026-03-05T071603Z",
+  "destination": "s3://example-logs-bucket/openclaw/",
+  "status": "simulated"
+}

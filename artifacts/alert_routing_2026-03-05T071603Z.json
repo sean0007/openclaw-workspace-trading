@@ -1,0 +1,9 @@
+{
+  "generated": "2026-03-05T071603Z",
+  "routes": {
+    "discord": "disabled",
+    "email": "ops@example.com",
+    "pager": "+10000000000"
+  },
+  "status": "manual_bind_required"
+}

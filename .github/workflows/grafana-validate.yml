@@ -1,0 +1,63 @@
+name: Grafana Validate
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  validate-dashboards:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.14'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt || true; fi
+
+      - name: Validate Grafana dashboards (dry-run)
+        run: |
+          python3 scripts/provision_grafana_dashboards.py --dry-run
+name: Grafana Dashboard CI
+
+on:
+  push:
+    paths:
+      - 'monitoring/grafana/**'
+      - '.github/workflows/grafana-validate.yml'
+
+jobs:
+  validate-dashboards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate dashboards folder exists
+        run: |
+          if [ ! -d monitoring/grafana/dashboards ]; then
+            echo 'Dashboards folder missing' >&2; exit 1; fi
+      - name: Validate each dashboard JSON
+        run: |
+          set -e
+          for f in monitoring/grafana/dashboards/*.json; do
+            echo "Checking $f"
+            jq empty "$f" || (echo "Invalid JSON in $f"; exit 2)
+            # fail if secrets-like keys exist
+            if jq -e 'paths | map(tostring) | join(".") | test("secureJsonData|password|api_key|token|secret")' "$f" >/dev/null 2>&1; then
+              echo "Potential secret keys found in $f"; exit 3
+            fi
+          done
+      - name: Validate provisioning files present
+        run: |
+          for p in monitoring/grafana/provisioning/dashboards.yml monitoring/grafana/provisioning/datasources.yml; do
+            if [ ! -f "$p" ]; then echo "$p missing" >&2; exit 4; fi
+          done
+      - name: Verify provisioning path in dashboards.yml
+        run: |
+          if ! grep -q '/var/lib/grafana/dashboards' monitoring/grafana/provisioning/dashboards.yml; then echo 'Provisioning path incorrect' >&2; exit 5; fi

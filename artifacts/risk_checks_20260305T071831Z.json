@@ -1,0 +1,17 @@
+{
+  "generated": "2026-03-05T07:18:31.008036",
+  "rules": [
+    {
+      "name": "per_asset_limit",
+      "value": 250000
+    },
+    {
+      "name": "leverage_limit",
+      "value": 5.0
+    },
+    {
+      "name": "daily_loss_cap",
+      "value": 1000.0
+    }
+  ]
+}

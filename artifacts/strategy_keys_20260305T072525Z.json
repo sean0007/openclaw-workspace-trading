@@ -1,0 +1,13 @@
+{
+  "generated": "2026-03-05T07:25:25.156293",
+  "strategy_keys": [
+    {
+      "strategy_id": "s1",
+      "key": "trading-key-s1"
+    },
+    {
+      "strategy_id": "s2",
+      "key": "trading-key-s2"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "phase": "Phase 1 Foundation",
+  "readiness_score": 38,
+  "the_good": [
+    "Core risk enforcement exists and is test-validated in the hardened workspace stack (daily loss guard, exposure/leverage checks, kill-switch behavior, bounded retry, fail-closed wallet preflight).",
+    "Execution service includes meaningful institutional primitives: idempotency controls, nonce replay protection, signed-token validation, gateway state machine, and audit event emission.",
+    "Backtest automation has strong guardrails for statistical hygiene (walk-forward gating, PF realism thresholding, open-ended timerange warning, atomic writes, history retention, schema migration handling).",
+    "Allocation-to-execution linkage is implemented: latest allocation decisions can adjust size and disable strategies before order flow.",
+    "Walk-forward framework exists with explicit OOS overlap detection and stability scoring logic.",
+    "Monitoring stack is operational and alert delivery path was repaired and validated end-to-end to production webhook ingestion.",
+    "Non-env test evidence is solid for key modules (risk, allocator, research integration, walk-forward, backtest parser suites passing)."
+  ],
+  "the_bad": [
+    "Requested strategy implementations (TrendFollowingBase, MeanReversion, VolatilityBreakout, RegimeClassifier classes) are not present in this codebase as concrete Python strategy classes; they are mostly treated as string identifiers.",
+    "No real detect_regime indicator engine (EMA/ADX/ATR computation) is implemented in the reviewed trading code; regime is ingested from markdown text outputs.",
+    "Current eligibility quality is poor: latest backtest rows show all tracked strategies ineligible (PF < 1, negative returns, stability failures).",
+    "Walk-forward records include runs with all-zero PF/stability values, indicating brittle parsing/execution quality despite framework existence.",
+    "Automation is only partially evidenced: cron entries exist, but key logs (backtest/walkforward) are sparse/empty at review time.",
+    "Research influence is narrow: allocation currently consumes only regime/news text files; crypto-structure and polymarket are not wired into decision math.",
+    "Execution realism remains simplistic (fixed mock slippage/fees in gateway paths, limited liquidity/latency realism, no robust market impact model).",
+    "Monitoring still has unresolved active alerts (AgentWorkflowStall, MetricsExporterUnavailable), indicating persistent operational instability."
+  ],
+  "the_ugly": [
+    "Critical wiring drift: default execution URL resolves to a non-execution service (:8000/execute returns 404), and default signer endpoint (:9000/sign) is unavailable; this is a direct trade-flow failure risk.",
+    "Database path split creates hidden state corruption risk (active DB vs empty shadow DB file). One typo/path mismatch can silently bypass live risk history.",
+    "execution_gateway.py contains orphaned duplicate code blocks after runtime section, indicating uncontrolled merge debt and increasing undefined-behavior risk.",
+    "metrics_exporter.py has broken method binding patterns; runtime symptom observed as 200 responses with zero-byte metrics payload while alerts show exporter unavailable.",
+    "Multiple parallel risk/execution stacks coexist (workspace stack vs memory stack) with overlapping responsibilities and inconsistent trust boundaries.",
+    "Hardcoded defaults and weak operational secrets posture remain in critical paths (test-style fallback API keys/URLs and permissive defaults), which would fail institutional security review.",
+    "Risk-lock dominance currently drives allocation outputs to zero repeatedly, implying system is often effectively non-trading while automation still reports activity.",
+    "Architecture has single points of failure across local files, local SQLite, and local process endpoints with limited resilience/failover design."
+  ],
+  "critical_risks_ranked": [
+    {
+      "risk": "Execution endpoint/signer miswiring (default RPC target mismatch and signer absent)",
+      "severity": "HIGH",
+      "impact": "Orders can be rejected or misrouted at runtime, causing either complete outage or uncontrolled fallback behavior."
+    },
+    {
+      "risk": "Strategy and regime engine gap vs declared design (missing concrete strategy/regime classifier implementations)",
+      "severity": "HIGH",
+      "impact": "Desk behavior depends on external labels/text artifacts rather than auditable model logic, failing model governance standards."
+    },
+    {
+      "risk": "Telemetry integrity failure (metrics exporter serving empty payload with active exporter-unavailable alerts)",
+      "severity": "HIGH",
+      "impact": "Risk committee and on-call visibility are impaired; silent degradation can persist undetected."
+    },
+    {
+      "risk": "State fragmentation from duplicate DB paths and duplicate execution/risk subsystems",
+      "severity": "HIGH",
+      "impact": "Inconsistent decisions, audit gaps, and irreproducible incidents across environments."
+    },
+    {
+      "risk": "Backtest/eligibility underperformance (recent PF<1 and negative returns across core strategies)",
+      "severity": "MEDIUM",
+      "impact": "No robust statistical basis for capital deployment under institutional hurdle rates."
+    },
+    {
+      "risk": "Execution realism deficit (mock fills, simplistic slippage/fees, weak liquidity/latency modeling)",
+      "severity": "MEDIUM",
+      "impact": "PnL expectations and drawdown controls can be materially overstated vs live execution."
+    },
+    {
+      "risk": "Hardcoded security/operational defaults in critical paths",
+      "severity": "MEDIUM",
+      "impact": "Credential and control-plane hygiene would fail formal infosec and operational risk audits."
+    },
+    {
+      "risk": "Automation observability gap (cron present, but weak log evidence for some loops)",
+      "severity": "LOW",
+      "impact": "Operational confidence reduced; harder to prove deterministic daily learning-loop completion."
+    }
+  ],
+  "architecture_maturity_level": "Structured Prototype",
+  "recommendations_priority_order": [
+    "P0 - Immediate Fix: Unify runtime wiring (single canonical DB path, explicit execution/signer endpoints, startup self-check hard fail on endpoint mismatch, remove orphaned duplicate gateway code, restore valid metrics payloads).",
+    "P1 - High Impact Upgrade: Implement real strategy/regime engine layer (concrete strategy classes, deterministic EMA/ADX/ATR regime computation, explicit model registry/versioning, and direct integration tests from signal -> allocation -> execution).",
+    "P2 - Structural Improvement: Raise realism/governance (liquidity/latency/impact model, robust OHLCV integrity checks, structural+polymarket factor ingestion, centralized config/secrets, and resilience patterns for process/DB/alerting SPOFs)."
+  ],
+  "estimated_days_to_phase2_ready": 42,
+  "honest_assessment_summary": "This is not institutional-ready. You have a strong base of risk-control intent and some genuinely solid hardening work, but the desk still behaves like a structured prototype with critical wiring drift, missing declared strategy/regime implementations, telemetry integrity problems, and fragmented architecture. A hedge fund risk committee would block Phase 2 promotion until execution-path correctness, model governance, and observability integrity are made deterministic and auditable."
+}

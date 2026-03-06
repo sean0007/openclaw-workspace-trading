@@ -1,0 +1,8 @@
+{
+  "generated": "2026-03-05T07:25:24.715334",
+  "gateway": "risk_gateway_stub",
+  "routes": [
+    "validate->signer->execute"
+  ],
+  "status": "simulated"
+}

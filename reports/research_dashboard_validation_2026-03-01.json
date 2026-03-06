@@ -1,0 +1,100 @@
+{
+  "timestamp": "2026-03-01",
+  "status": "PARTIAL",
+  "summary": {
+    "objective": "Build full Grafana research dashboards and validate OpenClaw telemetry",
+    "dashboards_created": 4,
+    "required_metrics_total": 33,
+    "required_metrics_found": 10,
+    "metric_coverage_percent": 30.3
+  },
+  "dashboards": [
+    "/Users/aihelper/openclaw-mission-control/monitoring/grafana/provisioning/dashboards/research-throughput.json",
+    "/Users/aihelper/openclaw-mission-control/monitoring/grafana/provisioning/dashboards/family-performance.json",
+    "/Users/aihelper/openclaw-mission-control/monitoring/grafana/provisioning/dashboards/evolution-tracking.json",
+    "/Users/aihelper/openclaw-mission-control/monitoring/grafana/provisioning/dashboards/robustness-monitor.json"
+  ],
+  "metric_coverage": {
+    "Counters": { "found": 3, "total": 3, "percent": 100.0 },
+    "Gauges": { "found": 0, "total": 7, "percent": 0.0 },
+    "Cross-market": { "found": 0, "total": 6, "percent": 0.0 },
+    "Evolution": { "found": 2, "total": 6, "percent": 33.3 },
+    "Engine_state": { "found": 4, "total": 6, "percent": 66.7 },
+    "Data_integrity": { "found": 1, "total": 3, "percent": 33.3 },
+    "Histograms": { "found": 0, "total": 2, "percent": 0.0 }
+  },
+  "present_required_metrics": [
+    "strategy_evaluated_total",
+    "strategy_accepted_total",
+    "strategy_rejected_total",
+    "population_size_current",
+    "survivor_count_current",
+    "strategies_per_minute",
+    "queue_depth",
+    "active_phase",
+    "dataset_hash",
+    "oos_guard_status"
+  ],
+  "missing_metrics": [
+    "strategy_is_pf",
+    "strategy_oos_pf",
+    "strategy_stability",
+    "strategy_trade_count",
+    "strategy_max_drawdown",
+    "strategy_win_rate",
+    "strategy_expectancy",
+    "pf_btc",
+    "pf_eth",
+    "pnl_contribution_ratio",
+    "regime_balance_score",
+    "robustness_delta_pf",
+    "noise_test_pf",
+    "generation_number",
+    "mutation_parameter_name",
+    "mutation_delta_percent",
+    "mutation_success_flag",
+    "cpu_usage",
+    "memory_usage",
+    "random_seed",
+    "walkforward_window_id",
+    "strategy_pf_distribution_bucket",
+    "strategy_dd_distribution_bucket"
+  ],
+  "label_consistency_issues": [
+    "No labeled research metrics were present in /metrics output (no '{...}' label sets).",
+    "Required dimensional views (family, rejection reason, mutation parameter) cannot be segmented from current unlabeled telemetry.",
+    "dataset_hash is emitted as a numeric hash surrogate, not a stable string fingerprint label.",
+    "active_phase is emitted as a binary value (mutation/non-mutation), not a multi-state labeled phase."
+  ],
+  "alerts_configured": [
+    {
+      "name": "AcceptanceRateAbove5Percent",
+      "expr": "(increase(strategy_accepted_total[15m]) / clamp_min(increase(strategy_evaluated_total[15m]), 1)) > 0.05"
+    },
+    {
+      "name": "OOSPfSpikeCluster",
+      "expr": "count_over_time((strategy_oos_pf > 2.0)[10m:30s]) >= 3"
+    },
+    {
+      "name": "StabilityWidespreadAbovePoint8",
+      "expr": "avg_over_time(strategy_stability[10m]) > 0.8"
+    },
+    {
+      "name": "StrategiesPerMinuteDrop",
+      "expr": "avg_over_time(strategies_per_minute[10m]) < 2"
+    },
+    {
+      "name": "DatasetHashUnexpectedChange",
+      "expr": "changes(dataset_hash[30m]) > 0"
+    },
+    {
+      "name": "OOSGuardUnsafe",
+      "expr": "oos_guard_status != 1"
+    }
+  ],
+  "validation_notes": [
+    "All 4 new dashboard JSON files parse successfully.",
+    "alerts.yml parses successfully.",
+    "scripts/ci/observability_audit.sh parity mode fails at alert inventory check due Grafana API auth/response mismatch (jq cannot index string)."
+  ]
+}

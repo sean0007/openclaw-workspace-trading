@@ -1,0 +1,11 @@
+{
+  "generated": "2026-03-05T101538Z",
+  "strategy_id": "teststrat",
+  "pnl": {
+    "realized": 0.0,
+    "unrealized": 0.0
+  },
+  "drawdown": 0.0,
+  "slippage": 0.0,
+  "fill_quality": 1.0
+}

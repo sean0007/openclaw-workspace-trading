@@ -1,0 +1,5 @@
+{
+  "generated": "2026-03-05T07:25:24.946114",
+  "halt_on_both_failed": true,
+  "action": "engage_safe_mode"
+}
