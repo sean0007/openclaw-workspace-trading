@@ -32,3 +32,29 @@ services:
     ports:
       - '9100:9100'
     restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes:
+      # Alertmanager expects its config at /etc/alertmanager/alertmanager.yml
+      - ./monitoring/alertmanager/config.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - '9094:9093'
+    restart: unless-stopped
+
+  alert-receiver:
+    image: python:3.11-slim
+    volumes:
+      - ./monitoring/alertmanager:/srv:ro
+      - ./monitoring/alertmanager/data:/srv/data:rw
+    command: ['python', '/srv/receiver.py']
+    ports:
+      - '5001:5001'
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - '8025:8025' # web UI
+      - '1025:1025' # smtp
+    restart: unless-stopped

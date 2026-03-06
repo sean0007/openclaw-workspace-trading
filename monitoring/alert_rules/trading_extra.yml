@@ -7,8 +7,9 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High average execution latency"
-          description: "Average execution latency over 5m is > 500ms ({{ $value }})."
+          summary: 'High average execution latency'
+          description: 'Average execution latency over 5m is > 500ms ({{ $value }}).'
+          runbook: 'https://example.com/runbooks/execution_latency'
 
       - alert: HighAverageSlippage
         expr: avg_over_time(openclaw_trade_slippage_bps[5m]) > 50
@@ -16,8 +17,9 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High average slippage"
-          description: "Average trade slippage (bps) over 5m exceeds 50 bps."
+          summary: 'High average slippage'
+          description: 'Average trade slippage (bps) over 5m exceeds 50 bps.'
+          runbook: 'https://example.com/runbooks/slippage'
 
       - alert: DLQPerStrategyGrowth
         expr: increase(openclaw_dlq_entries_total[10m]) > 0
@@ -25,5 +27,6 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "DLQ growth per label detected"
-          description: "Dead-letter queue entries increased in the last 10m: {{ $value }}. Investigate failing strategies."
+          summary: 'DLQ growth per label detected'
+          description: 'Dead-letter queue entries increased in the last 10m: {{ $value }}. Investigate failing strategies.'
+          runbook: 'https://example.com/runbooks/dlq_per_strategy'

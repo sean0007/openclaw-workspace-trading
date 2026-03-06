@@ -1,0 +1,30 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'team-pager'
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+
+receivers:
+  - name: 'team-pager'
+    email_configs:
+      - to: 'ops@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.example.com:587'
+        auth_username: 'alertmanager'
+        auth_identity: 'alertmanager'
+        # Use environment substitution in your deployment to inject the real password.
+        # Example: set ALERTMANAGER_SMTP_PASSWORD in the environment and render this file with envsubst.
+        auth_password: '${ALERTMANAGER_SMTP_PASSWORD}'
+    webhook_configs:
+      - url: 'http://alert-receiver:5001/alert' # use compose service DNS so Alertmanager posts to receiver container
+
+- name: 'team-chat'
+  slack_configs:
+    - api_url: '${ALERTMANAGER_SLACK_WEBHOOK}'
+      channel: '#alerts'
+      text: '{{ template "slack.default.title" . }}\n{{ range .Alerts }}{{ .Annotations.summary }} - {{ .Annotations.runbook }}\n{{ end }}'
+
+templates: []
